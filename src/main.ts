@@ -264,13 +264,23 @@ export default class TypstPlugin extends Plugin {
         MathJax.tex2chtml = this.tex2chtml
         this.compilerWorker.terminate()
     }
-
+	LaTeXMathSamples = ['\\alpha', '\\beta', '\\gamma', '\\delta', '\\epsilon', '\\zeta', '\\eta', '\\theta',
+ '\\iota', '\\kappa', '\\lambda', '\\mu', '\\nu', '\\xi', '\\pi', '\\rho', '\\sigma',
+ '\\tau', '\\upsilon', '\\phi', '\\chi', '\\psi', '\\omega', '\\sin', '\\cos', '\\tan',
+ '\\cot', '\\sec', '\\csc', '\\log', '\\exp', '\\ln', '\\sqrt', '\\in', '\\forall', '\\dot', '\\in', '\\mathbb', '\\mathcal',
+ '\\nabla', '\\sum', '\\prod', '\\int', '\\lim', '\\to', '\\implies', '\\iff', '\\equiv', '\\exists', '\\underset', '\\quad', '\\circ', '\\cdot', '\\langle', '\\rangle','\\det', '\\frac', '\\begin',  ]
     async overrideMathJax(value: boolean) {
         this.settings.override_math = value
         await this.saveSettings();
         if (this.settings.override_math) {
             // @ts-expect-error
-            MathJax.tex2chtml = (e, r) => this.createTypstMath(e, r)
+            MathJax.tex2chtml = (e, r) => {
+				const searched=e.toLowerCase();
+				if (this.LaTeXMathSamples.some(el => searched.includes(el)) {
+					return this.tex2chtml(e, r);
+				}
+				return this.createTypstMath(e, r);
+			}
         } else {
             // @ts-expect-error
             MathJax.tex2chtml = this.tex2chtml
