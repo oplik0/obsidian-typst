@@ -276,7 +276,7 @@ export default class TypstPlugin extends Plugin {
             // @ts-expect-error
             MathJax.tex2chtml = (e, r) => {
 				const searched=e.toLowerCase();
-				if (this.LaTeXMathSamples.some(el => searched.includes(el)) {
+				if (this.LaTeXMathSamples.some(el => searched.includes(el))) {
 					return this.tex2chtml(e, r);
 				}
 				return this.createTypstMath(e, r);
