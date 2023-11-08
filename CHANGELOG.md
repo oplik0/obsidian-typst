@@ -1,3 +1,16 @@
+# 0.8.0
+- Upgrade to Typst 0.9.0
+- Fix slow loading times [#34](https://github.com/fenjalien/obsidian-typst/issues/34)
+- Add package downloading [#10](https://github.com/fenjalien/obsidian-typst/issues/10)
+- Add file reading on mobile [#9](https://github.com/fenjalien/obsidian-typst/issues/9)
+
+# 0.7.1
+- Fix wrong paths generated for `@local`/`@preview` packages [#30](https://github.com/fenjalien/obsidian-typst/pull/30)
+
+# 0.7.0
+- Update to Typst v0.8.0
+- Fix not loading on mobile
+
 # 0.6.0
 - Improve error reporting
 - Upgrade to Typst 0.7.0

@@ -2,7 +2,7 @@ import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
 
-import inlineWorkerPlugin from "esbuild-plugin-inline-worker";
+import findCacheDir from "find-cache-dir";
 
 const banner =
     `/*
@@ -16,12 +16,33 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 
+let inlineWorkerPlugin = {
+    name: 'inline-worker-plugin',
+    setup(build) {
+        build.onLoad(
+            {filter: /\.(service|worker).(js|jsx|ts|tsx)$/},
+            async ({path: workerPath}) => {
+                let workerCode = await buildWorker(workerPath);
+                return {
+                contents: `
+                export default function inlineWorker() {
+                    let blob = new Blob([${JSON.stringify(workerCode)}])
+                    let url = URL.createObjectURL(blob)
+                    let worker = ${workerPath.includes("service") ? "navigator.serviceWorker.register(url, {scope: '/'})" : "new Worker(url)"};
+                    URL.revokeObjectURL(url)
+                    return worker
+                }`,
+                loader: 'js',
+                 };
+            }
+        );
+    },
+}
+
+
 let wasmPlugin = {
     name: 'wasm',
     setup(build) {
-        //   let path = require('path')
-        //   let fs = require('fs')
-
         // Resolve ".wasm" files to a path with a namespace
         build.onResolve({ filter: /\.wasm$/ }, args => {
             if (args.resolveDir === '') {
@@ -42,6 +63,33 @@ let wasmPlugin = {
         }))
     },
 }
+
+
+
+let cacheDir = findCacheDir({
+  name: 'inline-sevice-worker',
+  create: true,
+});
+
+async function buildWorker(workerPath) {
+  let scriptNameParts = path.basename(workerPath).split('.');
+  scriptNameParts.pop();
+  scriptNameParts.push('js');
+  let scriptName = scriptNameParts.join('.');
+  let bundlePath = path.resolve(cacheDir, scriptName);
+
+  await esbuild.build({
+    entryPoints: [workerPath],
+    bundle: true,
+    minify: true,
+    outfile: bundlePath,
+    target: 'es2018',
+    format: 'cjs',
+  });
+
+  return fs.promises.readFile(bundlePath, {encoding: 'utf-8'});
+}
+
 
 const context = await esbuild.context({
     banner: {
@@ -70,8 +118,12 @@ const context = await esbuild.context({
     sourcemap: prod ? false : "inline",
     treeShaking: true,
     outfile: "main.js",
+    define: {
+        PLUGIN_VERSION: JSON.stringify(process.env.npm_package_version)
+    },
     plugins: [
-        inlineWorkerPlugin({ format: "cjs", target: "es2018", plugins: [wasmPlugin] })
+        inlineWorkerPlugin,
+        wasmPlugin
     ]
 })
 

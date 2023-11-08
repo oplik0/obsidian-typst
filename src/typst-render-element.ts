@@ -1,4 +1,5 @@
-import { optimize } from 'svgo';
+//@ts-ignore
+import { optimize } from 'svgo/dist/svgo.browser.js';
 
 export default class TypstRenderElement extends HTMLElement {
     static compile: (path: string, source: string, size: number, display: boolean, fontSize: number) => Promise<ImageData | string>;
@@ -31,7 +32,7 @@ export default class TypstRenderElement extends HTMLElement {
         // this.style.height = TypstRenderElement.prevHeight;
         // }
 
-        if (this.format == "image") {
+        if (this.format == "image" && this.canvas == undefined) {
             this.canvas = this.appendChild(createEl("canvas", { attr: { height: TypstRenderElement.prevHeight }, cls: "typst-doc" }))
         }
 
@@ -96,7 +97,6 @@ export default class TypstRenderElement extends HTMLElement {
                 } catch (error) {
                     // For some reason it is uncaught so remove "Uncaught "
                     error = error.slice(9)
-                    console.error(error);
                     let pre = createEl("pre", {
                         attr: {
                             style: "white-space: pre;"
